@@ -1,4 +1,7 @@
 <h1> Panduan UAS Pemweb 2024/2025 </h1> 
+
+<i> Base Url : http://127.0.0.1:8000/event </i> (Port sebagai Contoh)
+
 <h3> Contoh consume API dengan Jquery : </h3>
 <code>
 $.ajax({
@@ -54,3 +57,5 @@ calendar.addEvent({
 });
 </code>
 -------------------------------------------
+
+<b> Jika Terdapat Pertanyaan, anda bisa membuat Issue di repositori ini </b>
