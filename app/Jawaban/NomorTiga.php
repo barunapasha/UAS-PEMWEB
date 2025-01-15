@@ -7,31 +7,88 @@ use Illuminate\Http\Request;
 use App\Models\Event;
 
 class NomorTiga {
+    public function getData() {
+        // Mengambil semua data jadwal user yang sedang login
+        $data = Event::where('user_id', Auth::id())
+                    ->orderBy('start', 'asc')
+                    ->get(); // Tidak perlu toArray() di sini
+        return $data;
+    }
 
-	public function getData () {
-		// Tuliskan code mengambil semua data jadwal user, simpan di variabel $data 
-		$data = [];
-		return $data;
-	}
+    public function getSelectedData(Request $request) {
+        // Validasi input
+        $request->validate([
+            'id' => 'required|exists:events,id'
+        ]);
 
-	public function getSelectedData (Request $request) {
+        // Mengambil 1 data jadwal berdasarkan ID
+        $data = Event::where('id', $request->id)
+                    ->where('user_id', Auth::id())
+                    ->first();
 
-		// Tuliskan code mengambil 1 data jadwal user dengan id jadwal, simpan di variabel $data 
-		$data = [];
-		return response()->json($data);
-	}
+        if (!$data) {
+            return response()->json(['error' => 'Data tidak ditemukan'], 404);
+        }
 
-	public function update (Request $request) {
+        return response()->json($data);
+    }
 
-		// Tuliskan code mengupdate 1 jadwal
-		return redirect()->route('event.home');
-	}
+    public function update(Request $request) {
+        // Validasi input
+        $request->validate([
+            'id' => 'required|exists:events,id',
+            'name' => 'required|string',
+            'start' => 'required|date',
+            'end' => 'required|date|after_or_equal:start'
+        ]);
 
-	public function delete (Request $request) {
+        try {
+            $event = Event::where('id', $request->id)
+                         ->where('user_id', Auth::id())
+                         ->first();
 
-		// Tuliskan code menghapus 1 jadwal
-		return redirect()->route('event.home');
-	}
+            if (!$event) {
+                return redirect()
+                    ->route('event.home')
+                    ->with('message', ['Jadwal tidak ditemukan!', 'danger']);
+            }
+
+            $event->update([
+                'name' => $request->name,
+                'start' => $request->start,
+                'end' => $request->end
+            ]);
+
+            return redirect()
+                ->route('event.home')
+                ->with('message', ['Jadwal berhasil diupdate!', 'success']);
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('event.home')
+                ->with('message', ['Gagal mengupdate jadwal!', 'danger']);
+        }
+    }
+
+    public function delete(Request $request) {
+        // Validasi input
+        $request->validate([
+            'id' => 'required|exists:events,id'
+        ]);
+
+        try {
+            $event = Event::where('id', $request->id)
+                         ->where('user_id', Auth::id())
+                         ->first();
+
+            if (!$event) {
+                return response()->json(['error' => 'Jadwal tidak ditemukan'], 404);
+            }
+
+            $event->delete();
+
+            return response()->json(['success' => 'Jadwal berhasil dihapus']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Gagal menghapus jadwal'], 500);
+        }
+    }
 }
-
-?>

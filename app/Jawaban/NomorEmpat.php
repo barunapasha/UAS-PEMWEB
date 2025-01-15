@@ -7,14 +7,21 @@ use Illuminate\Http\Request;
 use App\Models\Event;
 
 class NomorEmpat {
+    public function getJson() {
+        // Mengambil semua data jadwal
+        $events = Event::with('user')->get();
+        
+        $data = [];
+        foreach($events as $event) {
+            $data[] = [
+                'id' => $event->id,
+                'title' => $event->name . ' (' . $event->user->name . ')', // Gabungan nama jadwal dan pembuat
+                'start' => $event->start,
+                'end' => $event->end,
+                'color' => $event->user_id === Auth::id() ? '#0d6efd' : '#6c757d' // Biru untuk user yang login, abu-abu untuk lainnya
+            ];
+        }
 
-	public function getJson () {
-
-		// Tuliskan code untuk mengambil semua jadwal, simpan di variabel $data
-		$data = [];
-
-		return response()->json($data);
-	}
+        return response()->json($data);
+    }
 }
-
-?>
