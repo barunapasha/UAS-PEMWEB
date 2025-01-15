@@ -6,89 +6,111 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Event;
 
-class NomorTiga {
-    public function getData() {
-        // Mengambil semua data jadwal user yang sedang login
-        $data = Event::where('user_id', Auth::id())
-                    ->orderBy('start', 'asc')
-                    ->get(); // Tidak perlu toArray() di sini
-        return $data;
-    }
+class NomorTiga
+{
+	public function getData()
+	{
+		// Mengambil semua data jadwal user yang sedang login
+		$data = Event::where('user_id', Auth::id())
+			->orderBy('start', 'asc')
+			->get(); // Tidak perlu toArray() di sini
+		return $data;
+	}
 
-    public function getSelectedData(Request $request) {
-        // Validasi input
-        $request->validate([
-            'id' => 'required|exists:events,id'
-        ]);
+	public function getSelectedData(Request $request)
+	{
+		try {
+			// Validasi input
+			$request->validate([
+				'id' => 'required|exists:events,id'
+			]);
 
-        // Mengambil 1 data jadwal berdasarkan ID
-        $data = Event::where('id', $request->id)
-                    ->where('user_id', Auth::id())
-                    ->first();
+			// Mengambil data event
+			$event = Event::where('id', $request->id)
+				->where('user_id', Auth::id())
+				->first();
 
-        if (!$data) {
-            return response()->json(['error' => 'Data tidak ditemukan'], 404);
-        }
+			if (!$event) {
+				return response()->json([
+					'status' => 'error',
+					'error' => 'Data tidak ditemukan'
+				], 404);
+			}
 
-        return response()->json($data);
-    }
+			// Format tanggal ke Y-m-d untuk input date
+			$event->start = date('Y-m-d', strtotime($event->start));
+			$event->end = date('Y-m-d', strtotime($event->end));
 
-    public function update(Request $request) {
-        // Validasi input
-        $request->validate([
-            'id' => 'required|exists:events,id',
-            'name' => 'required|string',
-            'start' => 'required|date',
-            'end' => 'required|date|after_or_equal:start'
-        ]);
+			return response()->json([
+				'status' => 'success',
+				'data' => $event
+			]);
+		} catch (\Exception $e) {
+			return response()->json([
+				'status' => 'error',
+				'error' => 'Terjadi kesalahan: ' . $e->getMessage()
+			], 500);
+		}
+	}
 
-        try {
-            $event = Event::where('id', $request->id)
-                         ->where('user_id', Auth::id())
-                         ->first();
+	public function update(Request $request)
+	{
+		// Validasi input
+		$request->validate([
+			'id' => 'required|exists:events,id',
+			'name' => 'required|string',
+			'start' => 'required|date',
+			'end' => 'required|date|after_or_equal:start'
+		]);
 
-            if (!$event) {
-                return redirect()
-                    ->route('event.home')
-                    ->with('message', ['Jadwal tidak ditemukan!', 'danger']);
-            }
+		try {
+			$event = Event::where('id', $request->id)
+				->where('user_id', Auth::id())
+				->first();
 
-            $event->update([
-                'name' => $request->name,
-                'start' => $request->start,
-                'end' => $request->end
-            ]);
+			if (!$event) {
+				return redirect()
+					->route('event.home')
+					->with('message', ['Jadwal tidak ditemukan!', 'danger']);
+			}
 
-            return redirect()
-                ->route('event.home')
-                ->with('message', ['Jadwal berhasil diupdate!', 'success']);
-        } catch (\Exception $e) {
-            return redirect()
-                ->route('event.home')
-                ->with('message', ['Gagal mengupdate jadwal!', 'danger']);
-        }
-    }
+			$event->update([
+				'name' => $request->name,
+				'start' => $request->start,
+				'end' => $request->end
+			]);
 
-    public function delete(Request $request) {
-        // Validasi input
-        $request->validate([
-            'id' => 'required|exists:events,id'
-        ]);
+			return redirect()
+				->route('event.home')
+				->with('message', ['Jadwal berhasil diupdate!', 'success']);
+		} catch (\Exception $e) {
+			return redirect()
+				->route('event.home')
+				->with('message', ['Gagal mengupdate jadwal!', 'danger']);
+		}
+	}
 
-        try {
-            $event = Event::where('id', $request->id)
-                         ->where('user_id', Auth::id())
-                         ->first();
+	public function delete(Request $request)
+	{
+		// Validasi input
+		$request->validate([
+			'id' => 'required|exists:events,id'
+		]);
 
-            if (!$event) {
-                return response()->json(['error' => 'Jadwal tidak ditemukan'], 404);
-            }
+		try {
+			$event = Event::where('id', $request->id)
+				->where('user_id', Auth::id())
+				->first();
 
-            $event->delete();
+			if (!$event) {
+				return response()->json(['error' => 'Jadwal tidak ditemukan'], 404);
+			}
 
-            return response()->json(['success' => 'Jadwal berhasil dihapus']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Gagal menghapus jadwal'], 500);
-        }
-    }
+			$event->delete();
+
+			return response()->json(['success' => 'Jadwal berhasil dihapus']);
+		} catch (\Exception $e) {
+			return response()->json(['error' => 'Gagal menghapus jadwal'], 500);
+		}
+	}
 }

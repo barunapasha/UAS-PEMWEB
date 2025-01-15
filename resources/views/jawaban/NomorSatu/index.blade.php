@@ -1,8 +1,11 @@
 <div class="dropdown-menu dropdown-menu-right">
     @if (Auth::user())
-        <a href="{{ route('logout') }}" class="dropdown-item">
-            <i class="ni ni-user-run"></i> <span>Logout</span>
-        </a>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="dropdown-item">
+                <i class="ni ni-user-run"></i> <span>Logout</span>
+            </button>
+        </form>
     @else
         <a class="dropdown-item" data-toggle="modal" data-target="#loginModal">
             <i class="ni ni-bold-right"></i> <span>Login</span>
