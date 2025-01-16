@@ -1,6 +1,5 @@
 <script type="text/javascript">
     $(document).ready(function() {
-        // Fungsi untuk memuat data jadwal
         function loadEvents() {
             $.ajax({
                 method: "GET",
@@ -16,15 +15,13 @@
             });
         }
 
-        // Load events saat pertama kali
+        // Load events 
         loadEvents();
 
-        // Reload events setiap ada perubahan (tambah/edit/hapus)
         $('.table-schedule').on('calendar-update', function() {
             loadEvents();
         });
 
-        // Trigger reload events setelah tambah/edit/hapus jadwal
         if (typeof window.calendar !== 'undefined') {
             window.calendar.on('eventAdd', loadEvents);
             window.calendar.on('eventChange', loadEvents);

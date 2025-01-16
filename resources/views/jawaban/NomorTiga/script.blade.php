@@ -1,13 +1,11 @@
 <script>
 	$(document).ready(function() {
-		// Setup CSRF token untuk semua request AJAX
 		$.ajaxSetup({
 			headers: {
 				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
 			}
 		});
 
-		// Initialize DataTable
 		$('.table-schedule').DataTable({
 			language: {
 				paginate: {
@@ -34,16 +32,13 @@
 				success: function(response) {
 					console.log('Success response:', response);
 					if (response.status === true && response.data) {
-						// Reset form terlebih dahulu
 						$('#editForm')[0].reset();
 
-						// Isi form dengan data yang diterima
 						$('#edit_id').val(response.data.id);
 						$('#edit_name').val(response.data.name);
 						$('#edit_start').val(response.data.start);
 						$('#edit_end').val(response.data.end);
 
-						// Tampilkan modal
 						var editModal = new bootstrap.Modal(document.getElementById('editModal'));
 						editModal.show();
 					} else {
@@ -58,7 +53,7 @@
 			});
 		});
 
-		// Handle submit form edit - Modifikasi bagian ini
+		// Handle submit form edit 
 		$(document).on('submit', '#editForm', function(e) {
 			e.preventDefault();
 			console.log('Form submitted');
