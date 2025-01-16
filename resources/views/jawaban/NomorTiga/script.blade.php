@@ -1,108 +1,130 @@
-<script type="text/javascript">
-    $(document).ready(function() {
-        // Setup CSRF token untuk semua request AJAX
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
+<script>
+	$(document).ready(function() {
+		// Setup CSRF token untuk semua request AJAX
+		$.ajaxSetup({
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			}
+		});
 
-        // Initialize DataTable
-        const table = $('.table-schedule').DataTable({
-            language: {
-                paginate: {
-                    next: '<i class="bi bi-arrow-right"></i>',
-                    previous: '<i class="bi bi-arrow-left"></i>'
-                },
-                emptyTable: "Data tidak ditemukan",
-            },
-        });
+		// Initialize DataTable
+		$('.table-schedule').DataTable({
+			language: {
+				paginate: {
+					next: '<i class="bi bi-arrow-right"></i>',
+					previous: '<i class="bi bi-arrow-left"></i>'
+				},
+				emptyTable: "Data tidak ditemukan",
+			}
+		});
 
-        // Edit button click handler
-        $('.table-schedule').on('click', '.edit-btn', function(e) {
-            e.preventDefault();
-            const id = $(this).data('id');
-            
-            // Tampilkan loading state
-            $(this).prop('disabled', true);
-            
-            $.ajax({
-                url: "{{ route('event.getSelected') }}",
-                type: "POST",
-                data: { id: id },
-                success: function(response) {
-                    if (response.status === 'success' && response.data) {
-                        const event = response.data;
-                        $('#edit_id').val(event.id);
-                        $('#edit_name').val(event.name);
-                        $('#edit_start').val(event.start);
-                        $('#edit_end').val(event.end);
-                        $('#editModal').modal('show');
-                    } else {
-                        alert('Data tidak ditemukan');
-                    }
-                },
-                error: function(xhr) {
-                    const errorMsg = xhr.responseJSON?.error || 'Terjadi kesalahan saat mengambil data';
-                    console.error('Error:', errorMsg);
-                    alert(errorMsg);
-                },
-                complete: function() {
-                    // Hilangkan loading state
-                    $('.edit-btn').prop('disabled', false);
-                }
-            });
-        });
+		// Handle klik tombol edit
+		$(document).on('click', '.edit-btn', function(e) {
+			e.preventDefault();
+			let id = $(this).data('id');
+			console.log('Edit button clicked, ID:', id);
 
-        // Handle form submission
-        $('#editForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = $(this).serialize();
-            const submitBtn = $(this).find('button[type="submit"]');
-            
-            // Disable submit button
-            submitBtn.prop('disabled', true);
-            
-            $.ajax({
-                url: $(this).attr('action'),
-                type: 'POST',
-                data: formData,
-                success: function(response) {
-                    $('#editModal').modal('hide');
-                    location.reload();
-                },
-                error: function(xhr) {
-                    const errorMsg = xhr.responseJSON?.error || 'Terjadi kesalahan saat menyimpan data';
-                    alert(errorMsg);
-                },
-                complete: function() {
-                    submitBtn.prop('disabled', false);
-                }
-            });
-        });
+			$.ajax({
+				url: "{{ route('event.getSelected') }}",
+				type: 'POST',
+				data: {
+					id: id
+				},
+				dataType: 'json',
+				success: function(response) {
+					console.log('Success response:', response);
+					if (response.status === true && response.data) {
+						// Reset form terlebih dahulu
+						$('#editForm')[0].reset();
 
-        // Delete button click handler
-        $('.table-schedule').on('click', '.delete-btn', function() {
-            const id = $(this).data('id');
-            
-            if(confirm('Apakah anda yakin ingin menghapus jadwal ini?')) {
-                $(this).prop('disabled', true);
-                
-                $.ajax({
-                    url: "{{ route('event.delete') }}",
-                    type: "POST",
-                    data: { id: id },
-                    success: function(response) {
-                        location.reload();
-                    },
-                    error: function(xhr) {
-                        const errorMsg = xhr.responseJSON?.error || 'Terjadi kesalahan saat menghapus data';
-                        alert(errorMsg);
-                        $('.delete-btn').prop('disabled', false);
-                    }
-                });
-            }
-        });
-    });
+						// Isi form dengan data yang diterima
+						$('#edit_id').val(response.data.id);
+						$('#edit_name').val(response.data.name);
+						$('#edit_start').val(response.data.start);
+						$('#edit_end').val(response.data.end);
+
+						// Tampilkan modal
+						var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+						editModal.show();
+					} else {
+						console.log('Invalid response:', response);
+						alert('Data tidak valid');
+					}
+				},
+				error: function(xhr, status, error) {
+					console.error('Error details:', xhr.responseText);
+					alert('Terjadi kesalahan saat mengambil data');
+				}
+			});
+		});
+
+		// Handle submit form edit - Modifikasi bagian ini
+		$(document).on('submit', '#editForm', function(e) {
+			e.preventDefault();
+			console.log('Form submitted');
+
+			let formData = $(this).serialize();
+			console.log('Form data:', formData);
+
+			$.ajax({
+				url: "{{ route('event.update') }}",
+				type: 'POST',
+				data: formData,
+				dataType: 'json',
+				beforeSend: function() {
+					$('#editForm button[type="submit"]').attr('disabled', true);
+					console.log('Sending update request...');
+				},
+				success: function(response) {
+					console.log('Update response:', response);
+					if (response.status === true) {
+						console.log('Update successful');
+						$('#editModal').modal('hide');
+						setTimeout(function() {
+							window.location.reload();
+						}, 500);
+					} else {
+						console.log('Update failed:', response.message);
+						alert(response.message || 'Gagal menyimpan perubahan');
+					}
+				},
+				error: function(xhr, status, error) {
+					console.error('Update error:', xhr.responseText);
+					alert('Gagal menyimpan perubahan');
+				},
+				complete: function() {
+					$('#editForm button[type="submit"]').attr('disabled', false);
+					console.log('Update request completed');
+				}
+			});
+		});
+
+		// Handle delete 
+		$(document).on('click', '.delete-btn', function(e) {
+			e.preventDefault();
+			let id = $(this).data('id');
+
+			if (confirm('Apakah Anda yakin ingin menghapus jadwal ini?')) {
+				$.ajax({
+					url: "{{ route('event.delete') }}",
+					type: 'POST',
+					data: {
+						id: id
+					},
+					dataType: 'json',
+					success: function(response) {
+						if (response.status === true) {
+							location.reload();
+						} else {
+							alert(response.message || 'Gagal menghapus jadwal');
+						}
+					},
+					error: function(xhr, status, error) {
+						console.error('Delete error:', error);
+						alert('Gagal menghapus jadwal');
+					}
+				});
+			}
+		});
+	});
 </script>

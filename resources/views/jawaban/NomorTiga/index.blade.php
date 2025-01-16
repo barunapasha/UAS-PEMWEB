@@ -30,10 +30,10 @@
     </table>
 </div>
 
-<div class="modal fade" id="editModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form id="editForm" method="POST" action="{{ route('event.update') }}">
+            <form id="editForm" method="POST">
                 @csrf
                 <input type="hidden" name="id" id="edit_id">
                 <div class="modal-header">
@@ -43,21 +43,21 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label for="edit_name">Nama Jadwal</label>
                         <input type="text" class="form-control" id="edit_name" name="name" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label for="edit_start">Tanggal Mulai</label>
                         <input type="date" class="form-control" id="edit_start" name="start" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label for="edit_end">Tanggal Selesai</label>
                         <input type="date" class="form-control" id="edit_end" name="end" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Update</button>
                 </div>
             </form>
